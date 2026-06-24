@@ -1,10 +1,12 @@
-<h2 class="sr-only">Fully interactive wireframe of the Phantm supplier review tab: a searchable, filterable, sortable list of validation tasks that opens each product's checklist and bill-of-materials, validates it, and advances to the next task.</h2>
+<h2 class="sr-only">Fully interactive wireframe of the Phantm supplier review tab with brand fonts applied: a searchable, filterable, sortable list of validation tasks that opens each product's checklist and bill-of-materials, validates it, and advances to the next task.</h2>
 
-<div style="background: var(--color-background-secondary); border-radius: var(--border-radius-lg); padding: 0.75rem; overflow-x: auto;">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&family=Archivo+Narrow:wght@500;600&display=swap" rel="stylesheet">
+
+<div id="phantm-review-root" style="font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; font-weight:300; background: var(--color-background-secondary); border-radius: var(--border-radius-lg); padding: 0.75rem; overflow-x: auto;">
   <div style="background:#fff8ef; border-radius:var(--border-radius-md); border:0.5px solid var(--color-border-tertiary); min-width:680px; overflow:hidden;">
 
     <div style="display:flex; align-items:center; gap:18px; padding:11px 16px; border-bottom:0.5px solid var(--color-border-tertiary);">
-      <span style="font-size:18px; font-weight:500; color:#001a13;">phantm</span>
+      <span style="font-family:'Archivo Narrow',sans-serif; font-size:18px; font-weight:600; color:#001a13;">phantm</span>
       <span id="navreview" style="font-size:12px; font-weight:500; color:#001a13; padding-bottom:13px; margin-bottom:-11px; border-bottom:2px solid #1cba88;">review <span id="navbadge" style="background:#E24B4A; color:#fff; font-size:10px; padding:1px 6px; border-radius:8px;"></span></span>
       <span style="font-size:12px; color:var(--color-text-tertiary);">products</span>
       <span style="font-size:12px; color:var(--color-text-tertiary);">insights</span>
@@ -20,6 +22,7 @@
 
 <script>
 (function(){
+  var HEAD="'Archivo Narrow',sans-serif";
   var data = [
     {id:0,name:"1000W X 1500L X 200UM ASBESTOS BAGS",sku:"9PB10001500ASB",due:"12 Jun",overdue:true,
      items:[{t:"BOM details",note:"Add manufacturing & end-of-life region",done:false},{t:"Primary packaging",note:"No items yet — add or confirm none",done:false},{t:"Secondary packaging",note:"Carton + Bag recorded",done:true},{t:"Tertiary packaging",note:"Pallet wrap + Pallet recorded",done:true}]},
@@ -95,10 +98,10 @@
 
     document.getElementById("screen").innerHTML=
       '<div style="padding:14px 16px 4px;display:flex;align-items:flex-end;justify-content:space-between;gap:12px;">'
-        +'<div><p style="margin:0 0 2px;font-size:16px;font-weight:500;color:#001a13;">Your review tasks</p><p style="margin:0;font-size:12px;color:var(--color-text-secondary);">'+openCount()+' of '+data.length+' products still need review.</p></div>'
+        +'<div><p style="margin:0 0 2px;font-family:'+HEAD+';font-size:17px;font-weight:600;color:#001a13;">Your review tasks</p><p style="margin:0;font-size:12px;color:var(--color-text-secondary);">'+openCount()+' of '+data.length+' products still need review.</p></div>'
         +'<div style="text-align:right;min-width:120px;"><div style="height:6px;background:#E5E2DA;border-radius:3px;overflow:hidden;margin-bottom:3px;"><div style="height:100%;width:'+pct()+'%;background:#1cba88;"></div></div><span style="font-size:10px;color:#0f6e56;">'+pct()+'% complete</span></div>'
       +'</div>'
-      +'<div style="padding:10px 16px 8px;"><div style="position:relative;"><i class="ti ti-search" style="position:absolute;left:9px;top:8px;font-size:14px;color:var(--color-text-tertiary);"></i><input id="q" oninput="__search(this.value)" value="'+query.replace(/"/g,"&quot;")+'" placeholder="Search product or SKU" style="width:100%;padding:7px 10px 7px 28px;font-size:12px;"></div></div>'
+      +'<div style="padding:10px 16px 8px;"><div style="position:relative;"><i class="ti ti-search" style="position:absolute;left:9px;top:8px;font-size:14px;color:var(--color-text-tertiary);"></i><input id="q" oninput="__search(this.value)" value="'+query.replace(/"/g,"&quot;")+'" placeholder="Search product or SKU" style="width:100%;padding:7px 10px 7px 28px;font-size:12px;font-family:inherit;"></div></div>'
       +'<div style="display:flex;gap:8px;padding:0 16px 12px;flex-wrap:wrap;">'
         +chip("open","All open",data.filter(function(p){return !isDone(p);}).length,false)
         +chip("overdue","Overdue",data.filter(function(p){return p.overdue&&!isDone(p);}).length,true)
@@ -116,22 +119,22 @@
     var nextLabel=nextId!==null?data[nextId].name:"finish";
     var checklist=p.items.map(function(i,k){
       var foc=(focusItem===k&&!i.done);
-      var btn=i.done?'<span style="font-size:10px;color:#0f6e56;">Done</span>':'<button onclick="__tick('+k+')" style="font-size:10px;padding:3px 9px;border-radius:var(--border-radius-md);background:#1cba88;color:#04342c;border:none;cursor:pointer;">Mark done</button>';
+      var btn=i.done?'<span style="font-size:10px;color:#0f6e56;">Done</span>':'<button onclick="__tick('+k+')" style="font-size:10px;padding:3px 9px;border-radius:var(--border-radius-md);background:#1cba88;color:#04342c;border:none;cursor:pointer;font-family:inherit;">Mark done</button>';
       return '<div onclick="__focus('+k+')" style="cursor:pointer;display:flex;align-items:center;gap:7px;padding:8px 10px;border-radius:var(--border-radius-md);background:'+(foc?'#FAEEDA':(i.done?'#E1F5EE':'transparent'))+';border:0.5px solid '+(foc?'#EF9F27':'var(--color-border-tertiary)')+';margin-bottom:4px;">'
         +'<i class="ti '+(i.done?'ti-square-check':'ti-square')+'" style="font-size:15px;color:'+(i.done?'#0f6e56':'var(--color-text-secondary)')+';"></i>'
         +'<span style="flex:1;font-size:11px;font-weight:500;color:#001a13;">'+i.t+'</span>'+btn+'</div>';
     }).join("");
     var bomNote=(focusItem!==null&&!p.items[focusItem].done)?'<div style="padding:9px 11px;background:#FAEEDA;border-radius:var(--border-radius-md);margin-bottom:10px;"><p style="margin:0;font-size:11px;color:#854F0B;"><i class="ti ti-arrow-right" style="font-size:12px;vertical-align:-1px;"></i> '+p.items[focusItem].t+': '+p.items[focusItem].note+'</p></div>':'';
     var nextBtn=ready
-      ?'<button onclick="__validate()" style="flex:1;font-size:12px;font-weight:500;padding:11px;border-radius:var(--border-radius-md);background:#1cba88;color:#04342c;border:none;cursor:pointer;">Validate &amp; next <i class="ti ti-arrow-right" style="font-size:13px;vertical-align:-2px;"></i></button>'
-      :'<button disabled style="flex:1;font-size:12px;font-weight:500;padding:11px;border-radius:var(--border-radius-md);background:#E5E2DA;color:#8a8a84;border:none;">Complete all 4 items to validate</button>';
+      ?'<button onclick="__validate()" style="flex:1;font-size:12px;font-weight:500;padding:11px;border-radius:var(--border-radius-md);background:#1cba88;color:#04342c;border:none;cursor:pointer;font-family:inherit;">Validate &amp; next <i class="ti ti-arrow-right" style="font-size:13px;vertical-align:-2px;"></i></button>'
+      :'<button disabled style="flex:1;font-size:12px;font-weight:500;padding:11px;border-radius:var(--border-radius-md);background:#E5E2DA;color:#8a8a84;border:none;font-family:inherit;">Complete all 4 items to validate</button>';
 
     document.getElementById("screen").innerHTML=
       '<div style="padding:10px 16px;background:#F1F7F4;border-bottom:0.5px solid var(--color-border-tertiary);display:flex;align-items:center;gap:10px;">'
         +'<a onclick="__back()" style="font-size:11px;color:#0f6e56;cursor:pointer;white-space:nowrap;">← All tasks</a>'
         +'<div style="flex:1;height:6px;background:#E5E2DA;border-radius:3px;overflow:hidden;"><div style="height:100%;width:'+pct()+'%;background:#1cba88;"></div></div>'
         +'<span style="font-size:11px;color:var(--color-text-tertiary);white-space:nowrap;">next: '+nextLabel.slice(0,20)+(nextLabel.length>20?'…':'')+'</span></div>'
-      +'<div style="padding:12px 16px 4px;"><p style="margin:0;font-size:13px;font-weight:500;color:#001a13;">'+p.name+'</p><p style="margin:1px 0 0;font-size:11px;color:var(--color-text-tertiary);">Bill of materials · '+p.sku+'</p></div>'
+      +'<div style="padding:12px 16px 4px;"><p style="margin:0;font-family:'+HEAD+';font-size:14px;font-weight:600;color:#001a13;">'+p.name+'</p><p style="margin:1px 0 0;font-size:11px;color:var(--color-text-tertiary);">Bill of materials · '+p.sku+'</p></div>'
       +'<div style="display:grid;grid-template-columns:0.85fr 1.15fr;min-height:300px;">'
         +'<div style="padding:12px 16px;border-right:0.5px solid var(--color-border-tertiary);"><p style="margin:0 0 8px;font-size:11px;font-weight:500;color:#001a13;display:flex;justify-content:space-between;"><span>Checklist</span><span style="color:'+(ready?'#0f6e56':'var(--color-text-secondary)')+';">'+c+' / 4</span></p>'+checklist+'</div>'
         +'<div style="padding:12px 16px;background:#fff;"><p style="margin:0 0 8px;font-size:11px;font-weight:500;color:#001a13;">Bill of materials</p>'+bomNote
@@ -150,13 +153,13 @@
     document.getElementById("navbadge").style.display="none";
     document.getElementById("screen").innerHTML=
       '<div style="padding:46px 24px;text-align:center;"><div style="width:54px;height:54px;border-radius:50%;background:#E1F5EE;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;"><i class="ti ti-check" style="font-size:28px;color:#0f6e56;"></i></div>'
-      +'<p style="margin:0 0 4px;font-size:17px;font-weight:500;color:#001a13;">All caught up</p>'
+      +'<p style="margin:0 0 4px;font-family:'+HEAD+';font-size:18px;font-weight:600;color:#001a13;">All caught up</p>'
       +'<p style="margin:0 0 18px;font-size:13px;color:var(--color-text-secondary);">Every product is validated and flowing back to the customer.</p>'
-      +'<button onclick="__reopen()" style="font-size:12px;font-weight:500;padding:9px 18px;border-radius:var(--border-radius-md);background:#1cba88;color:#04342c;border:none;cursor:pointer;">View completed</button></div>';
+      +'<button onclick="__reopen()" style="font-size:12px;font-weight:500;padding:9px 18px;border-radius:var(--border-radius-md);background:#1cba88;color:#04342c;border:none;cursor:pointer;font-family:inherit;">View completed</button></div>';
   }
 
   function render(){
-    if(view==="list"){ if(openCount()===0&&filter==="open"&&!query){ renderDone(); } else { renderList(); var q=document.getElementById("q"); } }
+    if(view==="list"){ if(openCount()===0&&filter==="open"&&!query){ renderDone(); } else { renderList(); } }
     else renderDetail();
   }
 
