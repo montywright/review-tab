@@ -1,0 +1,174 @@
+<h2 class="sr-only">Fully interactive wireframe of the Phantm supplier review tab: a searchable, filterable, sortable list of validation tasks that opens each product's checklist and bill-of-materials, validates it, and advances to the next task.</h2>
+
+<div style="background: var(--color-background-secondary); border-radius: var(--border-radius-lg); padding: 0.75rem; overflow-x: auto;">
+  <div style="background:#fff8ef; border-radius:var(--border-radius-md); border:0.5px solid var(--color-border-tertiary); min-width:680px; overflow:hidden;">
+
+    <div style="display:flex; align-items:center; gap:18px; padding:11px 16px; border-bottom:0.5px solid var(--color-border-tertiary);">
+      <span style="font-size:18px; font-weight:500; color:#001a13;">phantm</span>
+      <span id="navreview" style="font-size:12px; font-weight:500; color:#001a13; padding-bottom:13px; margin-bottom:-11px; border-bottom:2px solid #1cba88;">review <span id="navbadge" style="background:#E24B4A; color:#fff; font-size:10px; padding:1px 6px; border-radius:8px;"></span></span>
+      <span style="font-size:12px; color:var(--color-text-tertiary);">products</span>
+      <span style="font-size:12px; color:var(--color-text-tertiary);">insights</span>
+      <span style="font-size:12px; color:var(--color-text-tertiary);">reports</span>
+      <span style="font-size:12px; color:var(--color-text-tertiary);">file manager</span>
+    </div>
+
+    <div id="screen"></div>
+
+  </div>
+  <p style="margin:10px 4px 0; font-size:12px; color:var(--color-text-secondary);">Working wireframe — search, filter and sort, then open any product to work its checklist and validate. "Validate &amp; next" advances to the next open task.</p>
+</div>
+
+<script>
+(function(){
+  var data = [
+    {id:0,name:"1000W X 1500L X 200UM ASBESTOS BAGS",sku:"9PB10001500ASB",due:"12 Jun",overdue:true,
+     items:[{t:"BOM details",note:"Add manufacturing & end-of-life region",done:false},{t:"Primary packaging",note:"No items yet — add or confirm none",done:false},{t:"Secondary packaging",note:"Carton + Bag recorded",done:true},{t:"Tertiary packaging",note:"Pallet wrap + Pallet recorded",done:true}]},
+    {id:1,name:"16mm x 850m Composite Strapping",sku:"9HNDSTRP16C",due:"12 Jun",overdue:true,
+     items:[{t:"BOM details",note:"Add manufacturing & end-of-life region",done:false},{t:"Primary packaging",note:"Confirm primary items",done:false},{t:"Secondary packaging",note:"Add secondary items",done:false},{t:"Tertiary packaging",note:"Add tertiary items",done:false}]},
+    {id:2,name:"19MM HEAVY DUTY PHOSPHATE BUCKLE",sku:"9WIREBUCK19HBP",due:"18 Jun",overdue:false,
+     items:[{t:"BOM details",note:"Confirm details",done:true},{t:"Primary packaging",note:"1 item recorded",done:true},{t:"Secondary packaging",note:"2 items recorded",done:true},{t:"Tertiary packaging",note:"Add total weight",done:false}]},
+    {id:3,name:"19MMX0.6MMX 700M YELLOW HAND STRAPPING",sku:"9HNDSTRP19YEL",due:"20 Jun",overdue:false,
+     items:[{t:"BOM details",note:"Confirm details",done:true},{t:"Primary packaging",note:"Confirm primary items",done:false},{t:"Secondary packaging",note:"2 items recorded",done:true},{t:"Tertiary packaging",note:"Add tertiary items",done:false}]},
+    {id:4,name:"230MMX175MM ENCLOSURE SLIP",sku:"9INVEN230175",due:"25 Jun",overdue:false,
+     items:[{t:"BOM details",note:"Not started",done:false},{t:"Primary packaging",note:"Not started",done:false},{t:"Secondary packaging",note:"Not started",done:false},{t:"Tertiary packaging",note:"Not started",done:false}]},
+    {id:5,name:"2CV400 REGAL TOILET ROLL 400S 2PLY",sku:"9C2V400",due:"28 Jun",overdue:false,
+     items:[{t:"BOM details",note:"Confirm details",done:true},{t:"Primary packaging",note:"Confirm primary items",done:false},{t:"Secondary packaging",note:"Add secondary items",done:false},{t:"Tertiary packaging",note:"2 items recorded",done:true}]},
+    {id:6,name:"25MMX450MT SCP-25 COMPOSITE STRAP",sku:"9HNDSTRP25450",due:"30 Jun",overdue:false,
+     items:[{t:"BOM details",note:"Confirmed",done:true},{t:"Primary packaging",note:"Confirmed",done:true},{t:"Secondary packaging",note:"Confirmed",done:true},{t:"Tertiary packaging",note:"Confirmed",done:true}]}
+  ];
+
+  var view="list", current=null, focusItem=null, filter="open", query="", justValidated=null;
+
+  function dc(p){ return p.items.filter(function(i){return i.done;}).length; }
+  function isDone(p){ return dc(p)===4; }
+  function inProg(p){ var c=dc(p); return c>0&&c<4; }
+  function openCount(){ return data.filter(function(p){return !isDone(p);}).length; }
+  function pct(){ return Math.round((data.filter(isDone).length/data.length)*100); }
+
+  function sortList(list){
+    return list.sort(function(a,b){
+      if(isDone(a)!==isDone(b)) return isDone(a)?1:-1;
+      if(a.overdue!==b.overdue) return a.overdue?-1:1;
+      return dc(b)-dc(a);
+    });
+  }
+  function visible(){
+    var list=data.slice();
+    if(query) list=list.filter(function(p){return (p.name+" "+p.sku).toLowerCase().indexOf(query.toLowerCase())>=0;});
+    if(filter==="open") list=list.filter(function(p){return !isDone(p);});
+    else if(filter==="overdue") list=list.filter(function(p){return p.overdue&&!isDone(p);});
+    else if(filter==="inprogress") list=list.filter(inProg);
+    else if(filter==="done") list=list.filter(isDone);
+    return sortList(list);
+  }
+  function nextOpenAfter(id){
+    var pool=sortList(data.filter(function(p){return !isDone(p)&&p.id!==id;}));
+    return pool.length?pool[0].id:null;
+  }
+
+  function chip(key,label,count,danger){
+    var active=filter===key;
+    var st=active?(danger?'background:#A32D2D;color:#fff;':'background:#224b3b;color:#fff;'):(danger?'color:#A32D2D;border:0.5px solid #F09595;':'color:#224b3b;border:0.5px solid var(--color-border-secondary);');
+    return '<span onclick="__filter(\''+key+'\')" style="cursor:pointer;font-size:11px;padding:5px 12px;border-radius:var(--border-radius-md);'+st+'">'+label+' · '+count+'</span>';
+  }
+
+  function renderList(){
+    var badge=document.getElementById("navbadge");
+    badge.textContent=openCount(); badge.style.display=openCount()===0?"none":"inline";
+
+    var banner = justValidated!==null
+      ? '<div style="margin:0 16px 12px;padding:9px 12px;background:#E1F5EE;border-radius:var(--border-radius-md);display:flex;align-items:center;gap:8px;"><i class="ti ti-circle-check" style="font-size:15px;color:#0f6e56;"></i><span style="font-size:11px;color:#04342c;">'+justValidated+' validated and sent to the customer.</span></div>'
+      : '';
+
+    var rows=visible().map(function(p){
+      var c=dc(p);
+      var bc=isDone(p)?"#1cba88":(p.overdue?"#E24B4A":(c>0?"#EF9F27":"var(--color-border-tertiary)"));
+      var segs=p.items.map(function(i){return '<span style="width:20px;height:5px;border-radius:3px;background:'+(i.done?"#1cba88":(c>0?"#F09595":"#D3D1C7"))+';"></span>';}).join("");
+      var status,action;
+      if(isDone(p)){ status='<span style="font-size:11px;color:#0f6e56;"><i class="ti ti-check" style="font-size:12px;vertical-align:-1px;"></i> Validated</span>'; action='<span onclick="event.stopPropagation();__open('+p.id+')" style="cursor:pointer;font-size:11px;color:#0f6e56;border:0.5px solid var(--color-border-secondary);padding:7px 14px;border-radius:var(--border-radius-md);">View</span>'; }
+      else { status='<span style="font-size:11px;color:'+(p.overdue?"#A32D2D":"var(--color-text-secondary)")+';">'+c+' of 4 · due '+p.due+(p.overdue?" · overdue":"")+'</span>'; action='<span onclick="event.stopPropagation();__open('+p.id+')" style="cursor:pointer;font-size:11px;font-weight:500;background:#1cba88;color:#04342c;padding:7px 16px;border-radius:var(--border-radius-md);white-space:nowrap;">'+(c>0?"Resume":"Start")+'</span>'; }
+      return '<div onclick="__open('+p.id+')" style="cursor:pointer;display:grid;grid-template-columns:1.7fr 0.9fr 1fr 0.7fr;gap:0;align-items:center;padding:12px 16px;border-bottom:0.5px solid var(--color-border-tertiary);border-left:3px solid '+bc+';">'
+        +'<div><p style="margin:0;font-size:12px;font-weight:500;color:#001a13;">'+p.name+'</p><p style="margin:1px 0 0;font-size:11px;color:var(--color-text-tertiary);">'+p.sku+'</p></div>'
+        +'<div style="display:flex;gap:3px;">'+segs+'</div><div>'+status+'</div><div style="text-align:right;">'+action+'</div></div>';
+    }).join("");
+    if(!rows) rows='<div style="padding:32px;text-align:center;font-size:12px;color:var(--color-text-secondary);">Nothing matches. Try another filter or clear the search.</div>';
+
+    document.getElementById("screen").innerHTML=
+      '<div style="padding:14px 16px 4px;display:flex;align-items:flex-end;justify-content:space-between;gap:12px;">'
+        +'<div><p style="margin:0 0 2px;font-size:16px;font-weight:500;color:#001a13;">Your review tasks</p><p style="margin:0;font-size:12px;color:var(--color-text-secondary);">'+openCount()+' of '+data.length+' products still need review.</p></div>'
+        +'<div style="text-align:right;min-width:120px;"><div style="height:6px;background:#E5E2DA;border-radius:3px;overflow:hidden;margin-bottom:3px;"><div style="height:100%;width:'+pct()+'%;background:#1cba88;"></div></div><span style="font-size:10px;color:#0f6e56;">'+pct()+'% complete</span></div>'
+      +'</div>'
+      +'<div style="padding:10px 16px 8px;"><div style="position:relative;"><i class="ti ti-search" style="position:absolute;left:9px;top:8px;font-size:14px;color:var(--color-text-tertiary);"></i><input id="q" oninput="__search(this.value)" value="'+query.replace(/"/g,"&quot;")+'" placeholder="Search product or SKU" style="width:100%;padding:7px 10px 7px 28px;font-size:12px;"></div></div>'
+      +'<div style="display:flex;gap:8px;padding:0 16px 12px;flex-wrap:wrap;">'
+        +chip("open","All open",data.filter(function(p){return !isDone(p);}).length,false)
+        +chip("overdue","Overdue",data.filter(function(p){return p.overdue&&!isDone(p);}).length,true)
+        +chip("inprogress","In progress",data.filter(inProg).length,false)
+        +chip("done","Completed",data.filter(isDone).length,false)
+      +'</div>'
+      +banner
+      +'<div style="display:grid;grid-template-columns:1.7fr 0.9fr 1fr 0.7fr;gap:0;background:#1cba88;color:#04342c;font-size:11px;font-weight:500;padding:8px 16px;"><span>Product</span><span>Checklist</span><span>Status</span><span style="text-align:right;">Action</span></div>'
+      +rows;
+  }
+
+  function renderDetail(){
+    var p=data[current], c=dc(p), ready=c===4;
+    var nextId=nextOpenAfter(current);
+    var nextLabel=nextId!==null?data[nextId].name:"finish";
+    var checklist=p.items.map(function(i,k){
+      var foc=(focusItem===k&&!i.done);
+      var btn=i.done?'<span style="font-size:10px;color:#0f6e56;">Done</span>':'<button onclick="__tick('+k+')" style="font-size:10px;padding:3px 9px;border-radius:var(--border-radius-md);background:#1cba88;color:#04342c;border:none;cursor:pointer;">Mark done</button>';
+      return '<div onclick="__focus('+k+')" style="cursor:pointer;display:flex;align-items:center;gap:7px;padding:8px 10px;border-radius:var(--border-radius-md);background:'+(foc?'#FAEEDA':(i.done?'#E1F5EE':'transparent'))+';border:0.5px solid '+(foc?'#EF9F27':'var(--color-border-tertiary)')+';margin-bottom:4px;">'
+        +'<i class="ti '+(i.done?'ti-square-check':'ti-square')+'" style="font-size:15px;color:'+(i.done?'#0f6e56':'var(--color-text-secondary)')+';"></i>'
+        +'<span style="flex:1;font-size:11px;font-weight:500;color:#001a13;">'+i.t+'</span>'+btn+'</div>';
+    }).join("");
+    var bomNote=(focusItem!==null&&!p.items[focusItem].done)?'<div style="padding:9px 11px;background:#FAEEDA;border-radius:var(--border-radius-md);margin-bottom:10px;"><p style="margin:0;font-size:11px;color:#854F0B;"><i class="ti ti-arrow-right" style="font-size:12px;vertical-align:-1px;"></i> '+p.items[focusItem].t+': '+p.items[focusItem].note+'</p></div>':'';
+    var nextBtn=ready
+      ?'<button onclick="__validate()" style="flex:1;font-size:12px;font-weight:500;padding:11px;border-radius:var(--border-radius-md);background:#1cba88;color:#04342c;border:none;cursor:pointer;">Validate &amp; next <i class="ti ti-arrow-right" style="font-size:13px;vertical-align:-2px;"></i></button>'
+      :'<button disabled style="flex:1;font-size:12px;font-weight:500;padding:11px;border-radius:var(--border-radius-md);background:#E5E2DA;color:#8a8a84;border:none;">Complete all 4 items to validate</button>';
+
+    document.getElementById("screen").innerHTML=
+      '<div style="padding:10px 16px;background:#F1F7F4;border-bottom:0.5px solid var(--color-border-tertiary);display:flex;align-items:center;gap:10px;">'
+        +'<a onclick="__back()" style="font-size:11px;color:#0f6e56;cursor:pointer;white-space:nowrap;">← All tasks</a>'
+        +'<div style="flex:1;height:6px;background:#E5E2DA;border-radius:3px;overflow:hidden;"><div style="height:100%;width:'+pct()+'%;background:#1cba88;"></div></div>'
+        +'<span style="font-size:11px;color:var(--color-text-tertiary);white-space:nowrap;">next: '+nextLabel.slice(0,20)+(nextLabel.length>20?'…':'')+'</span></div>'
+      +'<div style="padding:12px 16px 4px;"><p style="margin:0;font-size:13px;font-weight:500;color:#001a13;">'+p.name+'</p><p style="margin:1px 0 0;font-size:11px;color:var(--color-text-tertiary);">Bill of materials · '+p.sku+'</p></div>'
+      +'<div style="display:grid;grid-template-columns:0.85fr 1.15fr;min-height:300px;">'
+        +'<div style="padding:12px 16px;border-right:0.5px solid var(--color-border-tertiary);"><p style="margin:0 0 8px;font-size:11px;font-weight:500;color:#001a13;display:flex;justify-content:space-between;"><span>Checklist</span><span style="color:'+(ready?'#0f6e56':'var(--color-text-secondary)')+';">'+c+' / 4</span></p>'+checklist+'</div>'
+        +'<div style="padding:12px 16px;background:#fff;"><p style="margin:0 0 8px;font-size:11px;font-weight:500;color:#001a13;">Bill of materials</p>'+bomNote
+          +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:10px;">'
+            +'<div style="background:#EEEDFE;border-radius:var(--border-radius-md);padding:8px;"><p style="margin:0;font-size:10px;color:#534AB7;">Packaging mass</p><p style="margin:1px 0 0;font-size:14px;font-weight:500;color:#26215C;">13 kg</p></div>'
+            +'<div style="background:#E1F5EE;border-radius:var(--border-radius-md);padding:8px;"><p style="margin:0;font-size:10px;color:#0f6e56;">Recycled content</p><p style="margin:1px 0 0;font-size:14px;font-weight:500;color:#04342c;">0 %</p></div></div>'
+          +'<div style="border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);overflow:hidden;font-size:11px;"><div style="padding:7px 10px;background:#224b3b;color:#fff;">Secondary packaging</div>'
+            +'<div style="display:flex;justify-content:space-between;padding:6px 10px;border-bottom:0.5px solid var(--color-border-tertiary);"><span>Carton</span><span style="color:var(--color-text-secondary);">500 g</span></div>'
+            +'<div style="display:flex;justify-content:space-between;padding:6px 10px;"><span>Bag</span><span style="color:var(--color-text-secondary);">50 g</span></div></div>'
+          +'<p style="margin:8px 0 0;font-size:10px;color:var(--color-text-tertiary);">Editable BOM fields appear here. Ticking a checklist item focuses its section.</p></div>'
+      +'</div>'
+      +'<div style="display:flex;gap:8px;padding:12px 16px;border-top:0.5px solid var(--color-border-tertiary);">'+nextBtn+'</div>';
+  }
+
+  function renderDone(){
+    document.getElementById("navbadge").style.display="none";
+    document.getElementById("screen").innerHTML=
+      '<div style="padding:46px 24px;text-align:center;"><div style="width:54px;height:54px;border-radius:50%;background:#E1F5EE;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;"><i class="ti ti-check" style="font-size:28px;color:#0f6e56;"></i></div>'
+      +'<p style="margin:0 0 4px;font-size:17px;font-weight:500;color:#001a13;">All caught up</p>'
+      +'<p style="margin:0 0 18px;font-size:13px;color:var(--color-text-secondary);">Every product is validated and flowing back to the customer.</p>'
+      +'<button onclick="__reopen()" style="font-size:12px;font-weight:500;padding:9px 18px;border-radius:var(--border-radius-md);background:#1cba88;color:#04342c;border:none;cursor:pointer;">View completed</button></div>';
+  }
+
+  function render(){
+    if(view==="list"){ if(openCount()===0&&filter==="open"&&!query){ renderDone(); } else { renderList(); var q=document.getElementById("q"); } }
+    else renderDetail();
+  }
+
+  window.__filter=function(f){ filter=f; justValidated=null; render(); };
+  window.__search=function(v){ query=v; renderList(); var q=document.getElementById("q"); if(q){q.focus();q.setSelectionRange(v.length,v.length);} };
+  window.__open=function(id){ current=id; focusItem=null; justValidated=null; view="detail"; render(); };
+  window.__back=function(){ view="list"; render(); };
+  window.__focus=function(k){ focusItem=k; renderDetail(); };
+  window.__tick=function(k){ data[current].items[k].done=true; focusItem=null; renderDetail(); };
+  window.__validate=function(){ justValidated=data[current].name; var nxt=nextOpenAfter(current); if(nxt!==null){ current=nxt; focusItem=null; renderDetail(); } else { view="list"; render(); } };
+  window.__reopen=function(){ filter="done"; view="list"; renderList(); };
+
+  render();
+})();
+</script>
