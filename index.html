@@ -5,7 +5,7 @@
 
     <div style="display:flex; align-items:center; gap:18px; padding:11px 16px; border-bottom:0.5px solid var(--color-border-tertiary);">
       <span style="font-family:'Archivo Narrow',sans-serif; font-size:18px; font-weight:600; color:#001a13;">phantm</span>
-      <span id="tab-review" onclick="__go('review')" style="cursor:pointer; font-size:12px; color:var(--color-text-tertiary);">review <span id="navbadge" style="background:#E24B4A; color:#fff; font-size:10px; padding:1px 6px; border-radius:8px;"></span></span>
+      <span id="tab-review" onclick="__go('review')" style="cursor:pointer; font-size:12px; color:var(--color-text-tertiary);">SKUs to review <span id="navbadge" style="background:#E24B4A; color:#fff; font-size:10px; padding:1px 6px; border-radius:8px;"></span></span>
       <span id="tab-products" onclick="__go('products')" style="cursor:pointer; font-size:12px; color:var(--color-text-tertiary);">products</span>
       <span style="font-size:12px; color:var(--color-text-tertiary);">insights</span>
       <span style="font-size:12px; color:var(--color-text-tertiary);">reports</span>
@@ -37,7 +37,7 @@
      items:[{t:"BOM details",note:"Confirmed",done:true},{t:"Primary packaging",note:"Confirmed",done:true},{t:"Secondary packaging",note:"Confirmed",done:true},{t:"Tertiary packaging",note:"Confirmed",done:true}]}
   ];
 
-  var tab="review", view="list", current=null, focusItem=null, filter="open", query="", justValidated=null;
+  var tab="review", filter="open", query="";
 
   function dc(p){ return p.items.filter(function(i){return i.done;}).length; }
   function isDone(p){ return dc(p)===4; }
@@ -60,10 +60,6 @@
     else if(filter==="inprogress") list=list.filter(inProg);
     else if(filter==="done") list=list.filter(isDone);
     return sortList(list);
-  }
-  function nextOpenAfter(id){
-    var pool=sortList(data.filter(function(p){return !isDone(p)&&p.id!==id;}));
-    return pool.length?pool[0].id:null;
   }
 
   function setTabs(){
@@ -103,7 +99,7 @@
         +'<div style="position:relative;background:#fff;border:2px solid #1cba88;border-radius:var(--border-radius-md);padding:12px 14px;display:flex;align-items:center;gap:14px;">'
           +'<div style="width:34px;height:34px;border-radius:50%;background:#E1F5EE;display:flex;align-items:center;justify-content:center;color:#0f6e56;flex-shrink:0;"><i class="ti ti-list-check" style="font-size:18px;"></i></div>'
           +'<div style="flex:1;min-width:0;">'
-            +'<p style="margin:0;font-size:14px;font-weight:500;color:#001a13;">'+openCount()+' products to review</p>'
+            +'<p style="margin:0;font-size:14px;font-weight:500;color:#001a13;">'+openCount()+' SKUs to review</p>'
             +'<p style="margin:2px 0 0;font-size:12px;color:var(--color-text-secondary);">Review the details, refine anything wrong, then validate. We\'ll take you through one at a time.</p>'
           +'</div>'
           +'<div style="display:flex;align-items:center;gap:12px;flex-shrink:0;">'
@@ -124,17 +120,14 @@
   }
 
   function renderList(){
-    var banner = justValidated!==null
-      ? '<div style="margin:0 16px 12px;padding:9px 12px;background:#E1F5EE;border-radius:var(--border-radius-md);display:flex;align-items:center;gap:8px;"><i class="ti ti-circle-check" style="font-size:15px;color:#0f6e56;"></i><span style="font-size:11px;color:#04342c;">'+justValidated+' validated and sent to the customer.</span></div>'
-      : '';
     var rows=visible().map(function(p){
       var c=dc(p);
       var bc=isDone(p)?"#1cba88":(p.overdue?"#E24B4A":(c>0?"#EF9F27":"var(--color-border-tertiary)"));
       var segs=p.items.map(function(i){return '<span style="width:20px;height:5px;border-radius:3px;background:'+(i.done?"#1cba88":(c>0?"#F09595":"#D3D1C7"))+';"></span>';}).join("");
       var status,action;
-      if(isDone(p)){ status='<span style="font-size:11px;color:#0f6e56;"><i class="ti ti-check" style="font-size:12px;vertical-align:-1px;"></i> Validated</span>'; action='<span onclick="event.stopPropagation();__open('+p.id+')" style="cursor:pointer;font-size:11px;color:#0f6e56;border:0.5px solid var(--color-border-secondary);padding:7px 14px;border-radius:var(--border-radius-md);">View</span>'; }
-      else { status='<span style="font-size:11px;color:'+(p.overdue?"#A32D2D":"var(--color-text-secondary)")+';">'+c+' of 4 · due '+p.due+(p.overdue?" · overdue":"")+'</span>'; action='<span onclick="event.stopPropagation();__open('+p.id+')" style="cursor:pointer;font-size:11px;font-weight:500;background:#1cba88;color:#04342c;padding:7px 16px;border-radius:var(--border-radius-md);white-space:nowrap;">'+(c>0?"Resume":"Start")+'</span>'; }
-      return '<div onclick="__open('+p.id+')" style="cursor:pointer;display:grid;grid-template-columns:1.7fr 0.9fr 1fr 0.7fr;gap:0;align-items:center;padding:12px 16px;border-bottom:0.5px solid var(--color-border-tertiary);border-left:3px solid '+bc+';">'
+      if(isDone(p)){ status='<span style="font-size:11px;color:#0f6e56;"><i class="ti ti-check" style="font-size:12px;vertical-align:-1px;"></i> Validated</span>'; action='<span style="font-size:11px;color:#0f6e56;border:0.5px solid var(--color-border-secondary);padding:7px 14px;border-radius:var(--border-radius-md);">View</span>'; }
+      else { status='<span style="font-size:11px;color:'+(p.overdue?"#A32D2D":"var(--color-text-secondary)")+';">'+c+' of 4 · due '+p.due+(p.overdue?" · overdue":"")+'</span>'; action='<span style="font-size:11px;font-weight:500;background:#1cba88;color:#04342c;padding:7px 16px;border-radius:var(--border-radius-md);white-space:nowrap;">'+(c>0?"Continue":"Review")+'</span>'; }
+      return '<div style="display:grid;grid-template-columns:1.7fr 0.9fr 1fr 0.7fr;gap:0;align-items:center;padding:12px 16px;border-bottom:0.5px solid var(--color-border-tertiary);border-left:3px solid '+bc+';">'
         +'<div><p style="margin:0;font-size:12px;font-weight:500;color:#001a13;">'+p.name+'</p><p style="margin:1px 0 0;font-size:11px;color:var(--color-text-tertiary);">'+p.sku+'</p></div>'
         +'<div style="display:flex;gap:3px;">'+segs+'</div><div>'+status+'</div><div style="text-align:right;">'+action+'</div></div>';
     }).join("");
@@ -142,7 +135,7 @@
 
     document.getElementById("screen").innerHTML=
       '<div style="padding:14px 16px 4px;display:flex;align-items:flex-end;justify-content:space-between;gap:12px;">'
-        +'<div><p style="margin:0 0 2px;font-family:'+HEAD+';font-size:17px;font-weight:600;color:#001a13;">Your review tasks</p><p style="margin:0;font-size:12px;color:var(--color-text-secondary);">'+openCount()+' of '+data.length+' products still need review.</p></div>'
+        +'<div><p style="margin:0 0 2px;font-family:'+HEAD+';font-size:17px;font-weight:600;color:#001a13;">SKUs to review</p><p style="margin:0;font-size:12px;color:var(--color-text-secondary);">'+openCount()+' of '+data.length+' SKUs still need review.</p></div>'
         +'<div style="text-align:right;min-width:120px;"><div style="height:6px;background:#E5E2DA;border-radius:3px;overflow:hidden;margin-bottom:3px;"><div style="height:100%;width:'+pct()+'%;background:#1cba88;"></div></div><span style="font-size:10px;color:#0f6e56;">'+pct()+'% complete</span></div>'
       +'</div>'
       +'<div style="padding:10px 16px 8px;"><div style="position:relative;"><i class="ti ti-search" style="position:absolute;left:9px;top:8px;font-size:14px;color:var(--color-text-tertiary);"></i><input id="q" oninput="__search(this.value)" value="'+query.replace(/"/g,"&quot;")+'" placeholder="Search product or SKU" style="width:100%;padding:7px 10px 7px 28px;font-size:12px;font-family:inherit;"></div></div>'
@@ -152,72 +145,20 @@
         +chip("inprogress","In progress",data.filter(inProg).length,false)
         +chip("done","Completed",data.filter(isDone).length,false)
       +'</div>'
-      +banner
       +'<div style="display:grid;grid-template-columns:1.7fr 0.9fr 1fr 0.7fr;gap:0;background:#1cba88;color:#04342c;font-size:11px;font-weight:500;padding:8px 16px;"><span>Product</span><span>Checklist</span><span>Status</span><span style="text-align:right;">Action</span></div>'
       +rows;
-  }
-
-  function renderDetail(){
-    var p=data[current], c=dc(p), ready=c===4;
-    var nextId=nextOpenAfter(current);
-    var nextLabel=nextId!==null?data[nextId].name:"finish";
-    var checklist=p.items.map(function(i,k){
-      var foc=(focusItem===k&&!i.done);
-      var btn=i.done?'<span style="font-size:10px;color:#0f6e56;">Done</span>':'<button onclick="__tick('+k+')" style="font-size:10px;padding:3px 9px;border-radius:var(--border-radius-md);background:#1cba88;color:#04342c;border:none;cursor:pointer;font-family:inherit;">Mark done</button>';
-      return '<div onclick="__focus('+k+')" style="cursor:pointer;display:flex;align-items:center;gap:7px;padding:8px 10px;border-radius:var(--border-radius-md);background:'+(foc?'#FAEEDA':(i.done?'#E1F5EE':'transparent'))+';border:0.5px solid '+(foc?'#EF9F27':'var(--color-border-tertiary)')+';margin-bottom:4px;">'
-        +'<i class="ti '+(i.done?'ti-square-check':'ti-square')+'" style="font-size:15px;color:'+(i.done?'#0f6e56':'var(--color-text-secondary)')+';"></i>'
-        +'<span style="flex:1;font-size:11px;font-weight:500;color:#001a13;">'+i.t+'</span>'+btn+'</div>';
-    }).join("");
-    var bomNote=(focusItem!==null&&!p.items[focusItem].done)?'<div style="padding:9px 11px;background:#FAEEDA;border-radius:var(--border-radius-md);margin-bottom:10px;"><p style="margin:0;font-size:11px;color:#854F0B;"><i class="ti ti-arrow-right" style="font-size:12px;vertical-align:-1px;"></i> '+p.items[focusItem].t+': '+p.items[focusItem].note+'</p></div>':'';
-    var nextBtn=ready
-      ?'<button onclick="__validate()" style="flex:1;font-size:12px;font-weight:500;padding:11px;border-radius:var(--border-radius-md);background:#1cba88;color:#04342c;border:none;cursor:pointer;font-family:inherit;">Validate &amp; next <i class="ti ti-arrow-right" style="font-size:13px;vertical-align:-2px;"></i></button>'
-      :'<button disabled style="flex:1;font-size:12px;font-weight:500;padding:11px;border-radius:var(--border-radius-md);background:#E5E2DA;color:#8a8a84;border:none;font-family:inherit;">Complete all 4 items to validate</button>';
-
-    document.getElementById("screen").innerHTML=
-      '<div style="padding:10px 16px;background:#F1F7F4;border-bottom:0.5px solid var(--color-border-tertiary);display:flex;align-items:center;gap:10px;">'
-        +'<a onclick="__back()" style="font-size:11px;color:#0f6e56;cursor:pointer;white-space:nowrap;">← All tasks</a>'
-        +'<div style="flex:1;height:6px;background:#E5E2DA;border-radius:3px;overflow:hidden;"><div style="height:100%;width:'+pct()+'%;background:#1cba88;"></div></div>'
-        +'<span style="font-size:11px;color:var(--color-text-tertiary);white-space:nowrap;">next: '+nextLabel.slice(0,20)+(nextLabel.length>20?'…':'')+'</span></div>'
-      +'<div style="padding:12px 16px 4px;"><p style="margin:0;font-family:'+HEAD+';font-size:14px;font-weight:600;color:#001a13;">'+p.name+'</p><p style="margin:1px 0 0;font-size:11px;color:var(--color-text-tertiary);">Bill of materials · '+p.sku+'</p></div>'
-      +'<div style="display:grid;grid-template-columns:0.85fr 1.15fr;min-height:300px;">'
-        +'<div style="padding:12px 16px;border-right:0.5px solid var(--color-border-tertiary);"><p style="margin:0 0 8px;font-size:11px;font-weight:500;color:#001a13;display:flex;justify-content:space-between;"><span>Checklist</span><span style="color:'+(ready?'#0f6e56':'var(--color-text-secondary)')+';">'+c+' / 4</span></p>'+checklist+'</div>'
-        +'<div style="padding:12px 16px;background:#fff;"><p style="margin:0 0 8px;font-size:11px;font-weight:500;color:#001a13;">Bill of materials</p>'+bomNote
-          +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:10px;">'
-            +'<div style="background:#EEEDFE;border-radius:var(--border-radius-md);padding:8px;"><p style="margin:0;font-size:10px;color:#534AB7;">Packaging mass</p><p style="margin:1px 0 0;font-size:14px;font-weight:500;color:#26215C;">13 kg</p></div>'
-            +'<div style="background:#E1F5EE;border-radius:var(--border-radius-md);padding:8px;"><p style="margin:0;font-size:10px;color:#0f6e56;">Recycled content</p><p style="margin:1px 0 0;font-size:14px;font-weight:500;color:#04342c;">0 %</p></div></div>'
-          +'<div style="border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);overflow:hidden;font-size:11px;"><div style="padding:7px 10px;background:#224b3b;color:#fff;">Secondary packaging</div>'
-            +'<div style="display:flex;justify-content:space-between;padding:6px 10px;border-bottom:0.5px solid var(--color-border-tertiary);"><span>Carton</span><span style="color:var(--color-text-secondary);">500 g</span></div>'
-            +'<div style="display:flex;justify-content:space-between;padding:6px 10px;"><span>Bag</span><span style="color:var(--color-text-secondary);">50 g</span></div></div>'
-          +'<p style="margin:8px 0 0;font-size:10px;color:var(--color-text-tertiary);">Editable BOM fields appear here. Ticking a checklist item focuses its section.</p></div>'
-      +'</div>'
-      +'<div style="display:flex;gap:8px;padding:12px 16px;border-top:0.5px solid var(--color-border-tertiary);">'+nextBtn+'</div>';
-  }
-
-  function renderDone(){
-    document.getElementById("screen").innerHTML=
-      '<div style="padding:46px 24px;text-align:center;"><div style="width:54px;height:54px;border-radius:50%;background:#E1F5EE;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;"><i class="ti ti-check" style="font-size:28px;color:#0f6e56;"></i></div>'
-      +'<p style="margin:0 0 4px;font-family:'+HEAD+';font-size:18px;font-weight:600;color:#001a13;">All caught up</p>'
-      +'<p style="margin:0 0 18px;font-size:13px;color:var(--color-text-secondary);">Every product is validated and flowing back to the customer.</p>'
-      +'<button onclick="__reopen()" style="font-size:12px;font-weight:500;padding:9px 18px;border-radius:var(--border-radius-md);background:#1cba88;color:#04342c;border:none;cursor:pointer;font-family:inherit;">View completed</button></div>';
   }
 
   function render(){
     setTabs();
     if(tab==="products"){ renderProducts(); return; }
-    if(view==="list"){ if(openCount()===0&&filter==="open"&&!query){ renderDone(); } else { renderList(); } }
-    else renderDetail();
+    renderList();
   }
 
-  window.__go=function(t){ tab=t; if(t==="review"){ view="list"; } render(); };
-  window.__startReview=function(){ tab="review"; view="list"; justValidated=null; render(); };
-  window.__filter=function(f){ filter=f; justValidated=null; render(); };
+  window.__go=function(t){ tab=t; render(); };
+  window.__startReview=function(){ tab="review"; render(); };
+  window.__filter=function(f){ filter=f; render(); };
   window.__search=function(v){ query=v; renderList(); var q=document.getElementById("q"); if(q){q.focus();q.setSelectionRange(v.length,v.length);} };
-  window.__open=function(id){ current=id; focusItem=null; justValidated=null; view="detail"; render(); };
-  window.__back=function(){ view="list"; render(); };
-  window.__focus=function(k){ focusItem=k; renderDetail(); };
-  window.__tick=function(k){ data[current].items[k].done=true; focusItem=null; renderDetail(); };
-  window.__validate=function(){ justValidated=data[current].name; var nxt=nextOpenAfter(current); if(nxt!==null){ current=nxt; focusItem=null; renderDetail(); } else { view="list"; render(); } };
-  window.__reopen=function(){ filter="done"; view="list"; renderList(); };
 
   render();
 })();
